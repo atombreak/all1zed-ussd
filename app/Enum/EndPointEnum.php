@@ -15,10 +15,10 @@ enum EndPointEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::BLOCK_CARD => '/accounts/card/deactivate/',
-            self::PIN_RESET => '/accounts/card/deactivate/',
-            self::CHECK_ACCOUNT => '/api/cards',
-            self::MERCHANT_PAY => '/payments/merchant/pay/',
+            self::BLOCK_CARD => 'Block Card',
+            self::PIN_RESET => 'Reset Card Pin',
+            self::CHECK_ACCOUNT => 'Check if Card Account Exists',
+            self::MERCHANT_PAY => 'Merchant Paying',
         };
     }
 

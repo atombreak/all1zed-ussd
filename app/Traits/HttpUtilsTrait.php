@@ -10,11 +10,6 @@ trait HttpUtilsTrait
 
     private EndPointEnum $endPointEnum;
 
-    public function __construct(EndPointEnum $endPointEnum)
-    {
-        $this->endPointEnum = $endPointEnum;
-    }
-
     public static function makeRequest($url, $method = "POST", $data = [], $headers = [])
     {
 
