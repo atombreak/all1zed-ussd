@@ -2,13 +2,12 @@
 
 namespace App\Traits;
 
-use App\Enums\EndPointEnum;
+use App\Traits\EndPointTrait;
 use Illuminate\Support\Facades\Http;
 
 trait HttpUtilsTrait
 {
-
-    private EndPointEnum $endPointEnum;
+    use EndPointTrait;
 
     public static function makeRequest($url, $method = "POST", $data = [], $headers = [])
     {
@@ -25,6 +24,7 @@ trait HttpUtilsTrait
             $responseBody = $response->json();
 
             return $responseBody;
+
         } catch (\Exception $e) {
 
             return [
@@ -39,11 +39,12 @@ trait HttpUtilsTrait
 
         try {
 
-            $requestRes = $this::makeRequest(EndPointEnum::CHECK_ACCOUNT, "GET", [
-                'phone_numer' => $MSISDN,
+            $requestRes = $this::makeRequest($this::$CHECK_ACCOUNT, "GET", [
+                'phone_number' => $MSISDN,
             ]);
 
             return $requestRes;
+
         } catch (\Exception $e) {
 
             return [
@@ -58,7 +59,7 @@ trait HttpUtilsTrait
 
         try {
 
-            $requestRes = $this::makeRequest(EndPointEnum::CHECK_ACCOUNT, "POST", [
+            $requestRes = $this::makeRequest($this::$MERCHANT_PAY, "POST", [
                 'phone_numer' => $MSISDN,
                 "merchant_code" => $merchant_code,
                 "txn_amount" => $txn_amount,
@@ -80,7 +81,7 @@ trait HttpUtilsTrait
     {
         try {
 
-            $requestRes = $this::makeRequest(EndPointEnum::PIN_RESET, "POST", [
+            $requestRes = $this::makeRequest($this::$PIN_RESET, "POST", [
                 'phone_numer' => $MSISDN,
                 'current_pin' => $current_pin,
                 'new_pin' => $new_pin,
@@ -88,6 +89,7 @@ trait HttpUtilsTrait
 
 
             return $requestRes;
+
         } catch (\Exception $e) {
 
             return [
@@ -102,13 +104,14 @@ trait HttpUtilsTrait
     {
         try {
 
-            $requestRes = $this::makeRequest(EndPointEnum::BLOCK_CARD, "POST", [
+            $requestRes = $this::makeRequest($this::$BLOCK_CARD, "POST", [
                 'phone_numer' => $MSISDN,
                 'reason' => "USSD Card Blocking",
                 'pin' => $pin,
             ]);
 
             return $requestRes;
+
         } catch (\Exception $e) {
 
             return [
@@ -117,4 +120,30 @@ trait HttpUtilsTrait
             ];
         }
     }
+
+    public function cardAccountRegister($MSISDN, $first_name, $last_name, $card_number, $pin)
+    {
+
+        try {
+
+            $requestRes = $this::makeRequest($this::$REGISTER_ACCOUNT, "POST", [
+                "first_name" => $first_name,
+                "last_name" => $last_name,
+                "phone_number" => $MSISDN,
+                "card_number" => $card_number,
+                "pin" => $pin,
+            ]);
+
+            return $requestRes;
+
+        } catch (\Exception $e) {
+
+            return [
+                "status" => "error",
+                "message" => $e->getMessage()
+            ];
+        }
+    }
+
+
 }

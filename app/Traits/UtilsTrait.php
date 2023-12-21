@@ -66,7 +66,7 @@ trait UtilsTrait
     {
         try {
 
-            return !$userExists ? $this->NewUserOptions() :  $this->ExistingUserOptions();
+            return $userExists ? $this->NewUserOptions() :  $this->ExistingUserOptions();
 
         } catch (\Exception $e) {
 

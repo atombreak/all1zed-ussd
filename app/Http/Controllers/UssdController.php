@@ -21,8 +21,7 @@ class UssdController extends Controller
 
             $accResponse = $this->checkAcc($MSISDN);
 
-            //$options = $this->options($accResponse);
-            $options = $this->options(true);
+            $options = $this->options(isset($accResponse['error_msg']));
 
 
             $menu_options = [];
