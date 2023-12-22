@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\RegisterUserJourney;
 use App\Traits\EndPointTrait;
 use Illuminate\Support\Facades\Http;
 
@@ -121,18 +122,27 @@ trait HttpUtilsTrait
         }
     }
 
-    public function cardAccountRegister($MSISDN, $first_name, $last_name, $card_number, $pin)
+    public function cardAccountRegister($MSISDN)
     {
 
         try {
 
+            $registerJourney = RegisterUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if($registerJourney == null){
+
+                return null;
+            }
+
             $requestRes = $this::makeRequest($this::$REGISTER_ACCOUNT, "POST", [
-                "first_name" => $first_name,
-                "last_name" => $last_name,
-                "phone_number" => $MSISDN,
-                "card_number" => $card_number,
-                "pin" => $pin,
+                "first_name" => $registerJourney->first_name,
+                "last_name" => $registerJourney->last_name,
+                "phone_number" => $registerJourney->MSISDN,
+                "card_number" => $registerJourney->card_number,
+                "pin" => $registerJourney->pin,
             ]);
+
+            RegisterUserJourney::destroy( $registerJourney->id );
 
             return $requestRes;
 

@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RegisterUserJourney;
+use App\Traits\HeaderUssdMsgTrait;
 use App\Traits\HttpUtilsTrait;
 use Illuminate\Http\Request;
 use App\Traits\UtilsTrait;
 
 class UssdController extends Controller
 {
-    use UtilsTrait, HttpUtilsTrait;
+    use UtilsTrait, HttpUtilsTrait, HeaderUssdMsgTrait;
 
     public function show(Request $request,)
     {
@@ -19,23 +21,31 @@ class UssdController extends Controller
             $RequestType = $request->query('RequestType');
             $sessionId = $this->generateUniqueString();
 
+            //$this->isValidPersonName('')
+
+
             $accResponse = $this->checkAcc($MSISDN);
+            $registerJourney = RegisterUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            $options = $this->options(isset($accResponse['error_msg']));
+            //dd($registerJourney);
 
+            if($RequestType == '1'){
 
-            $menu_options = [];
-            foreach ($options as $option) {
-                $menu_options[] = $option['id'] . '.' . ' ' . $option['name'];
+                $options = $this->options(isset($accResponse['error_msg']));
+
+                $response_msg = $this->formatOptionsResponseMsg($options, $this::$WELCOME_MSG);
+
+                return response($response_msg, 200)->header('Auth-key', '');
+
             }
 
-            $response_msg = 'Welcome to All1Zed Cards.' . "\n";
+            if(isset($accResponse['error_msg'])){
 
-            foreach ($menu_options as $key => $value) {
-                $response_msg .= "{$value} \n";
+                $response_msg = $this->formatResponseMsg($this::$ENTER_FIRST_NAME);
+
+                return response($response_msg, 200)->header('Auth-key', '');
+
             }
-
-            return response($response_msg, 200)->header('Auth-key', 'Bearer dfvlsdflkvmkdmfdfvS+EDwJNKLLDFPF');
 
         } catch (\Exception $e) {
             //throw $th;
