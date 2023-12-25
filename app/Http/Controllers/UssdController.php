@@ -41,6 +41,23 @@ class UssdController extends Controller
 
             if(isset($accResponse['error_msg'])){
 
+                if($SUBSCRIBER_INPUT == '1'){
+
+                    $newRegisterJourney = RegisterUserJourney::create([
+                        'phone_number' => $MSISDN
+                    ]);
+
+                    if($newRegisterJourney == null){
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_FIRST_NAME);
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+
+                }
+
                 $response_msg = $this->formatResponseMsg($this::$ENTER_FIRST_NAME);
 
                 return response($response_msg, 200)->header('Auth-key', '');
