@@ -56,8 +56,8 @@ trait UtilsTrait
                 "name" => "Register Card",
             ],
             [
-                "id" => 2,
-                "name" => "Buy Insurance",
+                "id" => 0,
+                "name" => "Cancel",
             ],
         ];
     }

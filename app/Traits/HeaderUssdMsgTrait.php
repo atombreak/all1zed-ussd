@@ -7,6 +7,12 @@ trait HeaderUssdMsgTrait
     // Welcome message
     public static string $WELCOME_MSG = 'Welcome to All1Zed Cards.';
 
+    //Thank you message
+    public static string $GOOD_BYE_MSG = 'Thank you for using All1Zed Cards.';
+
+    //Successful card registration message
+    public static string $SUCCESSFUL_CARD_REGISTRATION_MSG = 'Your card has been successfully registered. Thank you for joining to All1Zed Cards';
+
     //Error Message
     public static string $ERROR_MSG = 'There was an error processing your query. please try again later';
 
