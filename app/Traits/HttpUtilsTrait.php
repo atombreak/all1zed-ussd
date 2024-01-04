@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Traits\EndPointTrait;
 use Illuminate\Support\Facades\Http;
@@ -21,6 +22,7 @@ trait HttpUtilsTrait
 
             $response = Http::withHeaders($headers)->$method(env('CARDS_URL') . $url, $data);
 
+            //dd($response);
             // Accessing the response body as an array
             $responseBody = $response->json();
 
@@ -43,6 +45,36 @@ trait HttpUtilsTrait
             $requestRes = $this::makeRequest($this::$CHECK_ACCOUNT, "GET", [
                 'phone_number' => $MSISDN,
             ]);
+
+            return $requestRes;
+
+        } catch (\Exception $e) {
+
+            return [
+                "status" => "error",
+                "message" => $e->getMessage()
+            ];
+        }
+    }
+
+    public function checkBalance($MSISDN, $SUBSCRIBER_INPUT)
+    {
+
+        try {
+
+            $checkBalanceJourney = CheckBalanceUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if($checkBalanceJourney == null){
+
+                return null;
+            }
+
+            $requestRes = $this::makeRequest($this::$CHECK_BALANCE, "GET", [
+                'phone_number' => $MSISDN,
+                'pin' => $SUBSCRIBER_INPUT
+            ]);
+
+            CheckBalanceUserJourney::destroy( $checkBalanceJourney->id );
 
             return $requestRes;
 
@@ -137,7 +169,7 @@ trait HttpUtilsTrait
             $requestRes = $this::makeRequest($this::$REGISTER_ACCOUNT, "POST", [
                 "first_name" => $registerJourney->first_name,
                 "last_name" => $registerJourney->last_name,
-                "phone_number" => $registerJourney->MSISDN,
+                "phone_number" => $MSISDN,
                 "card_number" => $registerJourney->card_number,
                 "pin" => $registerJourney->pin,
             ]);

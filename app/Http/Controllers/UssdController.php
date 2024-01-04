@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Traits\HeaderUssdMsgTrait;
 use App\Traits\HttpUtilsTrait;
@@ -26,6 +27,7 @@ class UssdController extends Controller
 
             $accResponse = $this->checkAcc($MSISDN);
             $registerJourney = RegisterUserJourney::where('phone_number', '=', $MSISDN)->first();
+            $checkBalanceJourney = CheckBalanceUserJourney::where('phone_number', '=', $MSISDN)->first();
 
             //dd($registerJourney);
 
@@ -38,6 +40,8 @@ class UssdController extends Controller
                 return response($response_msg, 200)->header('Auth-key', '');
 
             }
+
+            //CheckBalanceUserJourney
 
             if(isset($accResponse['error_msg'])){
 
@@ -85,7 +89,7 @@ class UssdController extends Controller
                     $registerJourney->card_number = $SUBSCRIBER_INPUT;
                     $registerJourney->save();
 
-                    $response_msg = $this->formatResponseMsg($this::$ENTER_PIN);
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_SET_PIN);
 
                     return response($response_msg, 200)->header('Auth-key', '');
 
@@ -100,6 +104,14 @@ class UssdController extends Controller
 
                     $card_response = $this->cardAccountRegister($MSISDN);
 
+                    if($card_response['response_msg'] == "Card account with the this card number already exists"){
+
+                        return response()->json([
+                            "card_response" => $card_response,
+                        ]);
+
+                    }
+
                     return response($response_msg, 200)->header('Auth-key', '');
 
                 }
@@ -110,8 +122,47 @@ class UssdController extends Controller
 
             }
 
-            if (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '1') {
+            if ($checkBalanceJourney != null || (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '2')) {
                 //NOTE: Initialize Topup Card user Journey and all the logic involved
+
+                if ($checkBalanceJourney == null) {
+
+                    $newCheckBalanceJourney = CheckBalanceUserJourney::create([
+                        'phone_number' => $MSISDN
+                    ]);
+
+                    if($newCheckBalanceJourney == null){
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $this->formatResponseMsg("To check your balance," . $this::$ENTER_PIN);
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+
+
+                } else {
+
+                    $balance_response = $this->checkBalance($MSISDN, $SUBSCRIBER_INPUT);
+
+                    if($balance_response == null){
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    if(isset($balance_response['error_msg'])){
+
+                        $response_msg = $balance_response['error_msg'];
+
+                        return response($response_msg, 200)->header('Auth-key', '');
+
+                    }
+
+                    $response_msg = $balance_response['response_msg'];
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+                }
+
             }
 
             if (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '2') {

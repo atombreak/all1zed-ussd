@@ -20,6 +20,9 @@ trait HeaderUssdMsgTrait
     public static string $ENTER_FIRST_NAME = 'Please enter your first name';
     public static string $ENTER_LAST_NAME = 'Enter your last name';
     public static string $ENTER_CARD_NUMBER = 'Please enter the provided card number';
-    public static string $ENTER_PIN = 'Finally set a 4 digit pin for your new card';
+    public static string $ENTER_SET_PIN = 'Finally set a 4 digit pin for your new card';
+
+    // Card Pin set Header messages
+    public static string $ENTER_PIN = 'Please enter your 4 digit pin';
 
 }

@@ -10,6 +10,8 @@ trait EndPointTrait
 
     public static string $CHECK_ACCOUNT = '/api/cards';
 
+    public static string $CHECK_BALANCE = '/accounts/card/balance/';
+
     public static string $BLOCK_CARD = '/accounts/card/deactivate/';
 
     public static string $REGISTER_ACCOUNT = '/accounts/card_account/register/';
