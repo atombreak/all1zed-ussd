@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
+use App\Models\ResetPinUserJourney;
 use App\Models\TopUpCardUserJourney;
 use App\Traits\HeaderUssdMsgTrait;
 use App\Traits\HttpUtilsTrait;
@@ -30,6 +31,7 @@ class UssdController extends Controller
             $registerJourney = RegisterUserJourney::where('phone_number', '=', $MSISDN)->first();
             $checkBalanceJourney = CheckBalanceUserJourney::where('phone_number', '=', $MSISDN)->first();
             $topUpUserJourney = TopUpCardUserJourney::where('phone_number', '=', $MSISDN)->first();
+            $resetPinUserJourney = ResetPinUserJourney::where('phone_number', '=', $MSISDN)->first();
 
             //dd($registerJourney);
 
@@ -252,6 +254,75 @@ class UssdController extends Controller
                     }
 
                     $response_msg = $balance_response['response_msg'];
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+                }
+
+            }
+
+
+            //Check balance user journey
+            if ($resetPinUserJourney != null || (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '5')) {
+
+                if ($resetPinUserJourney == null) {
+
+                    $newResetPinUserJourney = ResetPinUserJourney::create([
+                        'phone_number' => $MSISDN
+                    ]);
+
+                    if($newResetPinUserJourney == null){
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_CURRENT_PIN);
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+
+
+                }
+
+                if($resetPinUserJourney->phone_number != null && $resetPinUserJourney->current_pin == null){
+
+                    $resetPinUserJourney->current_pin = $SUBSCRIBER_INPUT;
+                    $resetPinUserJourney->save();
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_NEW_PIN);
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+                }
+
+                if($resetPinUserJourney->current_pin != null && $resetPinUserJourney->new_pin == null){
+
+                    $resetPinUserJourney->new_pin = $SUBSCRIBER_INPUT;
+                    $resetPinUserJourney->save();
+
+                    $reset_pin_response = $this->pinReset($MSISDN);
+
+                    //dd($reset_pin_response);
+
+                    // if(1 + 1 == 2){
+
+                    //     return response()->json([
+                    //         "reset_pin_response" => $reset_pin_response,
+                    //     ]);
+
+                    // }
+
+                    if($reset_pin_response == null){
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    if(isset($reset_pin_response['error_msg'])){
+
+                        $response_msg = $reset_pin_response['error_msg'];
+
+                        return response($response_msg, 200)->header('Auth-key', '');
+
+                    }
+
+                    $response_msg = $reset_pin_response['response_msg'];
 
                     return response($response_msg, 200)->header('Auth-key', '');
                 }

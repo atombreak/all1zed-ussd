@@ -31,4 +31,9 @@ trait HeaderUssdMsgTrait
     public static string $TOP_UP_AMOUNT = "Kindly enter amount to be deposited";
 
 
+    /// Reset Pin Header Messages
+    public static string $ENTER_CURRENT_PIN = "Please enter your current pin";
+    public static string $ENTER_NEW_PIN = "Please enter your new 4 digit pin";
+
+
 }

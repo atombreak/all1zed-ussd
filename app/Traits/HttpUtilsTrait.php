@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
+use App\Models\ResetPinUserJourney;
 use App\Models\TopUpCardUserJourney;
 use App\Traits\EndPointTrait;
 use Illuminate\Support\Facades\Http;
@@ -94,7 +95,7 @@ trait HttpUtilsTrait
         try {
 
             $requestRes = $this::makeRequest($this::$MERCHANT_PAY, "POST", [
-                'phone_numer' => $MSISDN,
+                'phone_number' => $MSISDN,
                 "merchant_code" => $merchant_code,
                 "txn_amount" => $txn_amount,
                 "pin" => $pin,
@@ -111,15 +112,26 @@ trait HttpUtilsTrait
         }
     }
 
-    public function pinReset($MSISDN, $current_pin, $new_pin)
+    public function pinReset($MSISDN)
     {
         try {
 
+            $resetPinUserJourney = ResetPinUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if($resetPinUserJourney == null){
+
+                return null;
+            }
+
             $requestRes = $this::makeRequest($this::$PIN_RESET, "POST", [
-                'phone_numer' => $MSISDN,
-                'current_pin' => $current_pin,
-                'new_pin' => $new_pin,
+                'phone_number' => $MSISDN,
+                'current_pin' => $resetPinUserJourney->current_pin,
+                'new_pin' => $resetPinUserJourney->new_pin,
             ]);
+
+            //dd($requestRes);
+
+            ResetPinUserJourney::destroy( $resetPinUserJourney->id );
 
 
             return $requestRes;
@@ -139,7 +151,7 @@ trait HttpUtilsTrait
         try {
 
             $requestRes = $this::makeRequest($this::$BLOCK_CARD, "POST", [
-                'phone_numer' => $MSISDN,
+                'phone_number' => $MSISDN,
                 'reason' => "USSD Card Blocking",
                 'pin' => $pin,
             ]);
