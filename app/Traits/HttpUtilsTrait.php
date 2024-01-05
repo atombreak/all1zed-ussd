@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
+use App\Models\TopUpCardUserJourney;
 use App\Traits\EndPointTrait;
 use Illuminate\Support\Facades\Http;
 
@@ -186,6 +187,40 @@ trait HttpUtilsTrait
             ];
         }
     }
+
+    public function topUpCardAccount($MSISDN)
+    {
+
+        try {
+
+            $topUpUserJourney = TopUpCardUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if($topUpUserJourney == null){
+
+                return null;
+            }
+
+            $requestRes = $this::makeRequest($this::$TOP_UP_CARD, "POST", [
+                "txn_amount" => $topUpUserJourney->txn_amount,
+                "account_type" => $topUpUserJourney->account_type,
+                "phone_number" => $topUpUserJourney->payer_phone_number,
+                "card_number" => $topUpUserJourney->card_number,
+                "pin" => $topUpUserJourney->pin,
+            ]);
+
+            TopUpCardUserJourney::destroy( $topUpUserJourney->id );
+
+            return $requestRes;
+
+        } catch (\Exception $e) {
+
+            return [
+                "status" => "error",
+                "message" => $e->getMessage()
+            ];
+        }
+    }
+
 
 
 }

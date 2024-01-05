@@ -25,4 +25,10 @@ trait HeaderUssdMsgTrait
     // Card Pin set Header messages
     public static string $ENTER_PIN = 'Please enter your 4 digit pin';
 
+    //Top Up Card Header Messgaes
+    public static string $TOP_UP_ENTER_CARD_NUMBER = "Please enter the recepient's card number";
+    public static string $TOP_UP_PAYER_MOMO = "Enter the payer's Mobile Money number";
+    public static string $TOP_UP_AMOUNT = "Kindly enter amount to be deposited";
+
+
 }

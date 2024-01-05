@@ -14,6 +14,8 @@ trait EndPointTrait
 
     public static string $BLOCK_CARD = '/accounts/card/deactivate/';
 
+    public static string $TOP_UP_CARD = '/accounts/card/topup';
+
     public static string $REGISTER_ACCOUNT = '/accounts/card_account/register/';
 
 }
