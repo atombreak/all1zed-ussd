@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\BlockCardUserJourney;
 use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
@@ -26,9 +27,17 @@ trait HttpUtilsTrait
 
             //dd($response);
             // Accessing the response body as an array
-            $responseBody = $response->json();
+            $responseJson = $response->json();
 
-            return $responseBody;
+            // Get the status code
+            $statusCode = $response->status();
+
+            //dd($statusCode);
+
+            return [
+                'responseJson' => $responseJson,
+                'statusCode' => $statusCode
+            ];
 
         } catch (\Exception $e) {
 
@@ -47,6 +56,8 @@ trait HttpUtilsTrait
             $requestRes = $this::makeRequest($this::$CHECK_ACCOUNT, "GET", [
                 'phone_number' => $MSISDN,
             ]);
+
+            //dd();
 
             return $requestRes;
 
@@ -146,15 +157,24 @@ trait HttpUtilsTrait
     }
 
 
-    public function blockCard($MSISDN, $pin)
+    public function blockCard($MSISDN)
     {
         try {
 
+            $blockCardUserJourney = BlockCardUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if($blockCardUserJourney == null){
+
+                return null;
+            }
+
             $requestRes = $this::makeRequest($this::$BLOCK_CARD, "POST", [
                 'phone_number' => $MSISDN,
-                'reason' => "USSD Card Blocking",
-                'pin' => $pin,
+                'reason' => $blockCardUserJourney->reason,
+                'pin' => $blockCardUserJourney->pin,
             ]);
+
+            BlockCardUserJourney::destroy($blockCardUserJourney->id);
 
             return $requestRes;
 

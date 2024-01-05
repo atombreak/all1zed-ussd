@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BlockCardUserJourney;
 use App\Models\CheckBalanceUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
@@ -32,30 +33,32 @@ class UssdController extends Controller
             $checkBalanceJourney = CheckBalanceUserJourney::where('phone_number', '=', $MSISDN)->first();
             $topUpUserJourney = TopUpCardUserJourney::where('phone_number', '=', $MSISDN)->first();
             $resetPinUserJourney = ResetPinUserJourney::where('phone_number', '=', $MSISDN)->first();
+            $blockCardUserJourney = BlockCardUserJourney::where('phone_number', '=', $MSISDN)->first();
 
             //dd($registerJourney);
 
-            if($RequestType == '1'){
+            //dd($accResponse["statusCode"]);
 
-                $options = $this->options(isset($accResponse['error_msg']));
+            if ($RequestType == '1') {
+
+                $options = $this->options($accResponse["statusCode"] != 200);
 
                 $response_msg = $this->formatOptionsResponseMsg($options, $this::$WELCOME_MSG);
 
                 return response($response_msg, 200)->header('Auth-key', '');
-
             }
 
             //CheckBalanceUserJourney
 
-            if(isset($accResponse['error_msg'])){
+            if ($accResponse["statusCode"] == 404) {
 
-                if($SUBSCRIBER_INPUT == '1'){
+                if ($SUBSCRIBER_INPUT == '1') {
 
                     $newRegisterJourney = RegisterUserJourney::create([
                         'phone_number' => $MSISDN
                     ]);
 
-                    if($newRegisterJourney == null){
+                    if ($newRegisterJourney == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
@@ -63,10 +66,9 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg($this::$ENTER_FIRST_NAME);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
 
-                if($registerJourney != null && $registerJourney->first_name == null){
+                if ($registerJourney != null && $registerJourney->first_name == null) {
 
                     $registerJourney->first_name = $SUBSCRIBER_INPUT;
                     $registerJourney->save();
@@ -74,10 +76,9 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg($this::$ENTER_LAST_NAME);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
 
-                if($registerJourney != null && $registerJourney->last_name == null){
+                if ($registerJourney != null && $registerJourney->last_name == null) {
 
                     $registerJourney->last_name = $SUBSCRIBER_INPUT;
                     $registerJourney->save();
@@ -85,10 +86,9 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg($this::$ENTER_CARD_NUMBER);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
 
-                if($registerJourney != null && $registerJourney->card_number == null){
+                if ($registerJourney != null && $registerJourney->card_number == null) {
 
                     $registerJourney->card_number = $SUBSCRIBER_INPUT;
                     $registerJourney->save();
@@ -96,10 +96,9 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg($this::$ENTER_SET_PIN);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
 
-                if($registerJourney != null && $registerJourney->pin == null){
+                if ($registerJourney != null && $registerJourney->pin == null) {
 
                     $registerJourney->pin = $SUBSCRIBER_INPUT;
                     $registerJourney->save();
@@ -108,22 +107,19 @@ class UssdController extends Controller
 
                     $card_response = $this->cardAccountRegister($MSISDN);
 
-                    if($card_response['response_msg'] == "Card account with the this card number already exists"){
+                    if ($card_response['response_msg'] == "Card account with the this card number already exists") {
 
                         return response()->json([
                             "card_response" => $card_response,
                         ]);
-
                     }
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
 
                 $response_msg = $this->formatResponseMsg($this::$GOOD_BYE_MSG);
 
                 return response($response_msg, 200)->header('Auth-key', '');
-
             }
 
             if ($topUpUserJourney != null || (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '1')) {
@@ -135,7 +131,7 @@ class UssdController extends Controller
                         'phone_number' => $MSISDN
                     ]);
 
-                    if($newTopUpUserJourney == null){
+                    if ($newTopUpUserJourney == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
@@ -143,10 +139,9 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg($this::$TOP_UP_ENTER_CARD_NUMBER);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
 
-                if($topUpUserJourney->phone_number != null && $topUpUserJourney->card_number == null){
+                if ($topUpUserJourney->phone_number != null && $topUpUserJourney->card_number == null) {
 
                     $topUpUserJourney->card_number = $SUBSCRIBER_INPUT;
                     $topUpUserJourney->save();
@@ -156,7 +151,7 @@ class UssdController extends Controller
                     return response($response_msg, 200)->header('Auth-key', '');
                 }
 
-                if($topUpUserJourney->card_number != null && $topUpUserJourney->payer_phone_number == null){
+                if ($topUpUserJourney->card_number != null && $topUpUserJourney->payer_phone_number == null) {
 
                     $topUpUserJourney->payer_phone_number = $SUBSCRIBER_INPUT;
                     $topUpUserJourney->save();
@@ -168,7 +163,7 @@ class UssdController extends Controller
 
 
 
-                if($topUpUserJourney->payer_phone_number != null && $topUpUserJourney->txn_amount == null){
+                if ($topUpUserJourney->payer_phone_number != null && $topUpUserJourney->txn_amount == null) {
 
                     $topUpUserJourney->txn_amount = $SUBSCRIBER_INPUT;
                     $topUpUserJourney->save();
@@ -180,7 +175,7 @@ class UssdController extends Controller
 
 
 
-                if($topUpUserJourney->txn_amount != null && $topUpUserJourney->pin == null){
+                if ($topUpUserJourney->txn_amount != null && $topUpUserJourney->pin == null) {
 
                     $topUpUserJourney->pin = $SUBSCRIBER_INPUT;
                     $topUpUserJourney->save();
@@ -194,27 +189,22 @@ class UssdController extends Controller
                     //     return $top_up_response;
                     // }
 
-                    if($top_up_response == null){
+                    if ($top_up_response == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
 
-                    if(isset($top_up_response['error_msg'])){
+                    if (isset($top_up_response['error_msg'])) {
 
                         $response_msg = $top_up_response['error_msg'];
 
                         return response($response_msg, 200)->header('Auth-key', '');
-
                     }
 
                     $response_msg = $top_up_response['response_msg'];
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
                 }
-
-
-
             }
 
             //Check balance user journey
@@ -226,7 +216,7 @@ class UssdController extends Controller
                         'phone_number' => $MSISDN
                     ]);
 
-                    if($newCheckBalanceJourney == null){
+                    if ($newCheckBalanceJourney == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
@@ -234,34 +224,30 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg("To check your balance," . $this::$ENTER_PIN);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
-
                 } else {
 
                     $balance_response = $this->checkBalance($MSISDN, $SUBSCRIBER_INPUT);
 
-                    if($balance_response == null){
+                    if ($balance_response == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
 
-                    if(isset($balance_response['error_msg'])){
+                    if (isset($balance_response['error_msg'])) {
 
                         $response_msg = $balance_response['error_msg'];
 
                         return response($response_msg, 200)->header('Auth-key', '');
-
                     }
 
                     $response_msg = $balance_response['response_msg'];
 
                     return response($response_msg, 200)->header('Auth-key', '');
                 }
-
             }
 
 
-            //Check balance user journey
+            //Reset Pin user journey
             if ($resetPinUserJourney != null || (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '5')) {
 
                 if ($resetPinUserJourney == null) {
@@ -270,7 +256,7 @@ class UssdController extends Controller
                         'phone_number' => $MSISDN
                     ]);
 
-                    if($newResetPinUserJourney == null){
+                    if ($newResetPinUserJourney == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
@@ -278,11 +264,9 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg($this::$ENTER_CURRENT_PIN);
 
                     return response($response_msg, 200)->header('Auth-key', '');
-
-
                 }
 
-                if($resetPinUserJourney->phone_number != null && $resetPinUserJourney->current_pin == null){
+                if ($resetPinUserJourney->phone_number != null && $resetPinUserJourney->current_pin == null) {
 
                     $resetPinUserJourney->current_pin = $SUBSCRIBER_INPUT;
                     $resetPinUserJourney->save();
@@ -292,7 +276,7 @@ class UssdController extends Controller
                     return response($response_msg, 200)->header('Auth-key', '');
                 }
 
-                if($resetPinUserJourney->current_pin != null && $resetPinUserJourney->new_pin == null){
+                if ($resetPinUserJourney->current_pin != null && $resetPinUserJourney->new_pin == null) {
 
                     $resetPinUserJourney->new_pin = $SUBSCRIBER_INPUT;
                     $resetPinUserJourney->save();
@@ -309,25 +293,93 @@ class UssdController extends Controller
 
                     // }
 
-                    if($reset_pin_response == null){
+                    if ($reset_pin_response == null) {
 
                         return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
                     }
 
-                    if(isset($reset_pin_response['error_msg'])){
+                    if (isset($reset_pin_response['error_msg'])) {
 
                         $response_msg = $reset_pin_response['error_msg'];
 
                         return response($response_msg, 200)->header('Auth-key', '');
-
                     }
 
                     $response_msg = $reset_pin_response['response_msg'];
 
                     return response($response_msg, 200)->header('Auth-key', '');
                 }
+            }
+
+
+            //Block Card user journey
+            if ($blockCardUserJourney != null || (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '6')) {
+
+                if ($blockCardUserJourney == null) {
+
+                    $newResetPinUserJourney = BlockCardUserJourney::create([
+                        'phone_number' => $MSISDN
+                    ]);
+
+                    if ($newResetPinUserJourney == null) {
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_BLOCK_REASON);
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+                }
+
+                if ($blockCardUserJourney->phone_number != null && $blockCardUserJourney->reason == null) {
+
+                    $blockCardUserJourney->reason = $SUBSCRIBER_INPUT;
+                    $blockCardUserJourney->save();
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_PIN);
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+                }
+
+                if ($blockCardUserJourney->reason != null && $blockCardUserJourney->pin == null) {
+
+                    $blockCardUserJourney->pin = $SUBSCRIBER_INPUT;
+                    $blockCardUserJourney->save();
+
+                    $block_card_response = $this->blockCard($MSISDN);
+
+                    //dd($block_card_response);
+
+                    // if(1 + 1 == 2){
+
+                    //     return response()->json([
+                    //         "block_card_response" => $block_card_response,
+                    //     ]);
+
+                    // }
+
+                    if ($block_card_response == null) {
+
+                        return response($this::$ERROR_MSG, 200)->header('Auth-key', '');
+                    }
+
+                    if ($block_card_response["statusCode"] == 200) {
+
+                        $response_msg = $block_card_response['responseJson']['error_msg'];
+
+                        return response($response_msg, 200)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $block_card_response['responseJson']['Info'];
+
+                    return response($response_msg, 200)->header('Auth-key', '');
+
+                }
+
 
             }
+
+
 
             if (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '3') {
                 //NOTE: Initialize Send Money user Journey and all the logic involved
@@ -343,10 +395,8 @@ class UssdController extends Controller
 
             if (!isset($accResponse['error_msg']) && $SUBSCRIBER_INPUT == '6') {
                 //NOTE: Initialize Block Card user Journey and all the logic involved
+                $blockCardUserJourney;
             }
-
-
-
         } catch (\Exception $e) {
             //throw $th;
             return response($e->getMessage(), 200)
