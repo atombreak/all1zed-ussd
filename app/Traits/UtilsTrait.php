@@ -39,10 +39,6 @@ trait UtilsTrait
             [
                 "id" => 6,
                 "name" => "Block Card",
-            ],
-            [
-                "id" => 7,
-                "name" => "Buy Insurance",
             ]
         ];
     }
