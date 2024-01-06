@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\BlockCardUserJourney;
 use App\Models\CheckBalanceUserJourney;
+use App\Models\PayMerchantUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
 use App\Models\TopUpCardUserJourney;
@@ -100,17 +101,26 @@ trait HttpUtilsTrait
         }
     }
 
-    public function merchantPay($MSISDN,$merchant_code, $txn_amount, $pin)
+    public function merchantPay($MSISDN)
     {
 
         try {
 
+            $payMerchantJourney = PayMerchantUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if($payMerchantJourney == null){
+
+                return null;
+            }
+
             $requestRes = $this::makeRequest($this::$MERCHANT_PAY, "POST", [
                 'phone_number' => $MSISDN,
-                "merchant_code" => $merchant_code,
-                "txn_amount" => $txn_amount,
-                "pin" => $pin,
+                "merchant_code" => $payMerchantJourney->merchant_code,
+                "txn_amount" => $payMerchantJourney->txn_amount,
+                "pin" => $payMerchantJourney->pin,
             ]);
+
+            PayMerchantUserJourney::destroy($payMerchantJourney->id);
 
             return $requestRes;
 

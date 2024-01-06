@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlockCardUserJourney;
 use App\Models\CheckBalanceUserJourney;
+use App\Models\PayMerchantUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
 use App\Models\TopUpCardUserJourney;
@@ -35,6 +36,7 @@ class UssdController extends Controller
             $topUpUserJourney = TopUpCardUserJourney::where('phone_number', '=', $MSISDN)->first();
             $resetPinUserJourney = ResetPinUserJourney::where('phone_number', '=', $MSISDN)->first();
             $blockCardUserJourney = BlockCardUserJourney::where('phone_number', '=', $MSISDN)->first();
+            $payMerchantJourney = PayMerchantUserJourney::where('phone_number', '=', $MSISDN)->first();
 
             //dd($registerJourney);
 
@@ -107,12 +109,16 @@ class UssdController extends Controller
 
                     $card_response = $this->cardAccountRegister($MSISDN);
 
+                    if ($card_response == null || $card_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
+
+                        return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
                     if ($card_response['statusCode'] != $this::$STATUS_CREATED) {
 
                         $response_msg = $card_response['responseJson']['error_msg'];
 
                         return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
-
                     }
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
@@ -190,7 +196,7 @@ class UssdController extends Controller
                     //     return $top_up_response;
                     // }
 
-                    if ($top_up_response == null) {
+                    if ($top_up_response == null || $top_up_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
 
                         return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
                     }
@@ -225,11 +231,12 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg("To check your balance," . $this::$ENTER_PIN);
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+
                 } else {
 
                     $balance_response = $this->checkBalance($MSISDN, $SUBSCRIBER_INPUT);
 
-                    if ($balance_response == null) {
+                    if ($balance_response == null || $balance_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
 
                         return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
                     }
@@ -244,7 +251,80 @@ class UssdController extends Controller
                     $response_msg = $balance_response['responseJson']['response_msg'];
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+            }
 
+            //Pay Merchant user journey
+            if ($payMerchantJourney != null || ($accResponse['statusCode'] == $this::$STATUS_OK && $SUBSCRIBER_INPUT == '4')) {
+
+                if ($payMerchantJourney == null) {
+
+                    $newPayMerchantJourney = PayMerchantUserJourney::create([
+                        'phone_number' => $MSISDN
+                    ]);
+
+                    if ($newPayMerchantJourney == null) {
+
+                        return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_MERCHANT_CODE);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+                if ($payMerchantJourney->phone_number != null && $payMerchantJourney->merchant_code == null) {
+
+                    $payMerchantJourney->merchant_code = $SUBSCRIBER_INPUT;
+                    $payMerchantJourney->save();
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_AMOUNT);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+                if ($payMerchantJourney->merchant_code != null && $payMerchantJourney->txn_amount == null) {
+
+                    $payMerchantJourney->txn_amount = $SUBSCRIBER_INPUT;
+                    $payMerchantJourney->save();
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_PIN);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+                if ($payMerchantJourney->txn_amount != null && $payMerchantJourney->pin == null) {
+
+                    $payMerchantJourney->pin = $SUBSCRIBER_INPUT;
+                    $payMerchantJourney->save();
+
+                    $pay_merchant_response = $this->merchantPay($MSISDN);
+
+                    //dd($reset_pin_response);
+
+                    // if(1 + 1 == 2){
+
+                    //     return response()->json([
+                    //         "reset_pin_response" => $reset_pin_response,
+                    //     ]);
+
+                    // }
+
+                    if ($pay_merchant_response == null || $pay_merchant_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
+
+                        return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
+                    if ($pay_merchant_response['statusCode'] != $this::$STATUS_OK) {
+
+                        $response_msg = $pay_merchant_response['responseJson']['error_msg'];
+
+                        return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $pay_merchant_response['responseJson']['response_msg'];
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
                 }
             }
 
@@ -295,7 +375,7 @@ class UssdController extends Controller
 
                     // }
 
-                    if ($reset_pin_response == null) {
+                    if ($reset_pin_response == null || $reset_pin_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
 
                         return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
                     }
@@ -375,10 +455,7 @@ class UssdController extends Controller
                     $response_msg = $block_card_response['responseJson']['Info'];
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
-
                 }
-
-
             }
 
 

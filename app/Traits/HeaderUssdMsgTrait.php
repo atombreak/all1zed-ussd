@@ -37,4 +37,9 @@ trait HeaderUssdMsgTrait
 
     // Block Card Header Messages
     public static string $ENTER_BLOCK_REASON = "Enter the reason for blocking the card";
+
+    // Pay Merchant Header Messages
+    public static string $ENTER_MERCHANT_CODE = "Please enter the merchant code";
+    public static string $ENTER_AMOUNT = "Please enter the amount to be paid";
+
 }
