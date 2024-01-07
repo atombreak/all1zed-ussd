@@ -58,6 +58,21 @@ trait UtilsTrait
         ];
     }
 
+    public function TransactionType()
+    {
+
+        return [
+            [
+                "id" => 1,
+                "name" => "Someone's Card Account",
+            ],
+            [
+                "id" => 2,
+                "name" => "Other Institutions",
+            ],
+        ];
+    }
+
     public function options($userExists)
     {
         try {

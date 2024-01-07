@@ -18,4 +18,8 @@ trait EndPointTrait
 
     public static string $REGISTER_ACCOUNT = '/accounts/card_account/register/';
 
+    public static string $SEND_MONEY = '/payments/cashin/';
+
+    public static string $FETCH_BANKS = '/accounts/banks/list';
+
 }

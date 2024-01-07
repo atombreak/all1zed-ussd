@@ -7,6 +7,7 @@ use App\Models\CheckBalanceUserJourney;
 use App\Models\PayMerchantUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
+use App\Models\SendMoneyUserJourney;
 use App\Models\TopUpCardUserJourney;
 use App\Traits\HeaderUssdMsgTrait;
 use App\Traits\HttpUtilsTrait;
@@ -27,9 +28,6 @@ class UssdController extends Controller
             $RequestType = $request->query('RequestType');
             $sessionId = $this->generateUniqueString();
 
-            //$this->isValidPersonName('')
-
-
             $accResponse = $this->checkAcc($MSISDN);
             $registerJourney = RegisterUserJourney::where('phone_number', '=', $MSISDN)->first();
             $checkBalanceJourney = CheckBalanceUserJourney::where('phone_number', '=', $MSISDN)->first();
@@ -37,6 +35,7 @@ class UssdController extends Controller
             $resetPinUserJourney = ResetPinUserJourney::where('phone_number', '=', $MSISDN)->first();
             $blockCardUserJourney = BlockCardUserJourney::where('phone_number', '=', $MSISDN)->first();
             $payMerchantJourney = PayMerchantUserJourney::where('phone_number', '=', $MSISDN)->first();
+            $sendMoneyUserJourney = SendMoneyUserJourney::where('phone_number', '=', $MSISDN)->first();
 
             //dd($registerJourney);
 
@@ -231,7 +230,6 @@ class UssdController extends Controller
                     $response_msg = $this->formatResponseMsg("To check your balance," . $this::$ENTER_PIN);
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
-
                 } else {
 
                     $balance_response = $this->checkBalance($MSISDN, $SUBSCRIBER_INPUT);
@@ -253,6 +251,97 @@ class UssdController extends Controller
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
                 }
             }
+
+
+            //Send Money user journey
+            if ($sendMoneyUserJourney != null || ($accResponse['statusCode'] == $this::$STATUS_OK && $SUBSCRIBER_INPUT == '3')) {
+
+                if ($sendMoneyUserJourney == null) {
+
+                    $newSendMoneyUserJourney = SendMoneyUserJourney::create([
+                        'phone_number' => $MSISDN
+                    ]);
+
+                    if ($newSendMoneyUserJourney == null) {
+
+                        return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $this->formatOptionsResponseMsg($this->TransactionType(), $this::$CHOOSE_PAYMENT_TYPE);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+                if ($sendMoneyUserJourney->phone_number != null && $SUBSCRIBER_INPUT == '1') {
+
+                    $sendMoneyUserJourney->account_type = 'card';
+                    $sendMoneyUserJourney->save();
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_RECEIVER_CARD_NUMBER);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+
+                }
+
+
+                if ($sendMoneyUserJourney->phone_number != null && $SUBSCRIBER_INPUT == '2') {
+
+                    $sendMoneyUserJourney->account_type = 'nfs';
+                    $sendMoneyUserJourney->save();
+
+                    //Fetch available banks from the api
+                    $banksFetched = $this->fetchBanks();
+
+                    $response_msg = $this->formatOptionsResponseMsg($banksFetched, $this::$SELECT_BANK);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+                if ($sendMoneyUserJourney->merchant_code != null && $sendMoneyUserJourney->txn_amount == null) {
+
+                    $sendMoneyUserJourney->txn_amount = $SUBSCRIBER_INPUT;
+                    $sendMoneyUserJourney->save();
+
+                    $response_msg = $this->formatResponseMsg($this::$ENTER_PIN);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+                if ($sendMoneyUserJourney->txn_amount != null && $sendMoneyUserJourney->pin == null) {
+
+                    $sendMoneyUserJourney->pin = $SUBSCRIBER_INPUT;
+                    $sendMoneyUserJourney->save();
+
+                    $pay_merchant_response = $this->merchantPay($MSISDN);
+
+                    //dd($reset_pin_response);
+
+                    // if(1 + 1 == 2){
+
+                    //     return response()->json([
+                    //         "reset_pin_response" => $reset_pin_response,
+                    //     ]);
+
+                    // }
+
+                    if ($pay_merchant_response == null || $pay_merchant_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
+
+                        return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
+                    if ($pay_merchant_response['statusCode'] != $this::$STATUS_OK) {
+
+                        $response_msg = $pay_merchant_response['responseJson']['error_msg'];
+
+                        return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                    }
+
+                    $response_msg = $pay_merchant_response['responseJson']['response_msg'];
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+            }
+
 
             //Pay Merchant user journey
             if ($payMerchantJourney != null || ($accResponse['statusCode'] == $this::$STATUS_OK && $SUBSCRIBER_INPUT == '4')) {

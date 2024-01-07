@@ -7,6 +7,7 @@ use App\Models\CheckBalanceUserJourney;
 use App\Models\PayMerchantUserJourney;
 use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
+use App\Models\SendMoneyUserJourney;
 use App\Models\TopUpCardUserJourney;
 use App\Traits\EndPointTrait;
 use Illuminate\Support\Facades\Http;
@@ -39,7 +40,6 @@ trait HttpUtilsTrait
                 'responseJson' => $responseJson,
                 'statusCode' => $statusCode
             ];
-
         } catch (\Exception $e) {
 
             return [
@@ -61,7 +61,6 @@ trait HttpUtilsTrait
             //dd();
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -78,7 +77,7 @@ trait HttpUtilsTrait
 
             $checkBalanceJourney = CheckBalanceUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            if($checkBalanceJourney == null){
+            if ($checkBalanceJourney == null) {
 
                 return null;
             }
@@ -88,10 +87,9 @@ trait HttpUtilsTrait
                 'pin' => $SUBSCRIBER_INPUT
             ]);
 
-            CheckBalanceUserJourney::destroy( $checkBalanceJourney->id );
+            CheckBalanceUserJourney::destroy($checkBalanceJourney->id);
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -108,7 +106,7 @@ trait HttpUtilsTrait
 
             $payMerchantJourney = PayMerchantUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            if($payMerchantJourney == null){
+            if ($payMerchantJourney == null) {
 
                 return null;
             }
@@ -123,7 +121,6 @@ trait HttpUtilsTrait
             PayMerchantUserJourney::destroy($payMerchantJourney->id);
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -139,7 +136,7 @@ trait HttpUtilsTrait
 
             $resetPinUserJourney = ResetPinUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            if($resetPinUserJourney == null){
+            if ($resetPinUserJourney == null) {
 
                 return null;
             }
@@ -152,11 +149,10 @@ trait HttpUtilsTrait
 
             //dd($requestRes);
 
-            ResetPinUserJourney::destroy( $resetPinUserJourney->id );
+            ResetPinUserJourney::destroy($resetPinUserJourney->id);
 
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -173,7 +169,7 @@ trait HttpUtilsTrait
 
             $blockCardUserJourney = BlockCardUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            if($blockCardUserJourney == null){
+            if ($blockCardUserJourney == null) {
 
                 return null;
             }
@@ -187,7 +183,6 @@ trait HttpUtilsTrait
             BlockCardUserJourney::destroy($blockCardUserJourney->id);
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -204,7 +199,7 @@ trait HttpUtilsTrait
 
             $registerJourney = RegisterUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            if($registerJourney == null){
+            if ($registerJourney == null) {
 
                 return null;
             }
@@ -217,10 +212,9 @@ trait HttpUtilsTrait
                 "pin" => $registerJourney->pin,
             ]);
 
-            RegisterUserJourney::destroy( $registerJourney->id );
+            RegisterUserJourney::destroy($registerJourney->id);
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -237,7 +231,7 @@ trait HttpUtilsTrait
 
             $topUpUserJourney = TopUpCardUserJourney::where('phone_number', '=', $MSISDN)->first();
 
-            if($topUpUserJourney == null){
+            if ($topUpUserJourney == null) {
 
                 return null;
             }
@@ -250,10 +244,9 @@ trait HttpUtilsTrait
                 "pin" => $topUpUserJourney->pin,
             ]);
 
-            TopUpCardUserJourney::destroy( $topUpUserJourney->id );
+            TopUpCardUserJourney::destroy($topUpUserJourney->id);
 
             return $requestRes;
-
         } catch (\Exception $e) {
 
             return [
@@ -264,5 +257,67 @@ trait HttpUtilsTrait
     }
 
 
+    public function sendMoney($MSISDN)
+    {
 
+        try {
+
+            $sendMoneyUserJourney = SendMoneyUserJourney::where('phone_number', '=', $MSISDN)->first();
+
+            if ($sendMoneyUserJourney == null) {
+
+                return null;
+            }
+
+            $requestRes = $this::makeRequest($this::$SEND_MONEY, "POST", [
+                "txn_amount" => $sendMoneyUserJourney->txn_amount,
+                "account_type" => $sendMoneyUserJourney->account_type,
+                "phone_number" => $sendMoneyUserJourney->payer_phone_number,
+                "card_number" => $sendMoneyUserJourney->card_number,
+                "pin" => $sendMoneyUserJourney->pin,
+            ]);
+
+            SendMoneyUserJourney::destroy($sendMoneyUserJourney->id);
+
+            return $requestRes;
+        } catch (\Exception $e) {
+
+            return [
+                "status" => "error",
+                "message" => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Fetches the list of banks from the API and formats it.
+     *
+     * @return array
+     */
+    public function fetchBanks()
+    {
+
+        try {
+            // Make the GET request
+            $requestRes = $this::makeRequest($this::$FETCH_BANKS, "GET");
+
+            $formattedBanks = [];
+            $index = 1; // Start indexing from 1
+
+            // Process each bank and format the data
+            foreach ($requestRes['responseJson'] as $bank) {
+                $formattedBanks[$index++] = [
+                    'id' => $bank['institution_id'],
+                    'name' => $bank['institution_name'],
+                ];
+            }
+
+            // Return the formatted array
+            return $formattedBanks;
+
+        } catch (\Exception $e) {
+
+            return [];
+        }
+    }
 }

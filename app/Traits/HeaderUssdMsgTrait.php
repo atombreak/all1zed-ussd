@@ -42,4 +42,9 @@ trait HeaderUssdMsgTrait
     public static string $ENTER_MERCHANT_CODE = "Please enter the merchant code";
     public static string $ENTER_AMOUNT = "Please enter the amount to be paid";
 
+    // Send Money User Journey
+    public static string $CHOOSE_PAYMENT_TYPE = "Choose where you want to send to:";
+    public static string $ENTER_RECEIVER_CARD_NUMBER = "Please enter the receiver's card number";
+    public static string $SELECT_BANK = "Please select bank receiving";
+
 }
