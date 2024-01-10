@@ -18,15 +18,15 @@ trait UtilsTrait
         return [
             [
                 "id" => 1,
-                "name" => "Topup Card",
+                "name" => "Send Money",
             ],
             [
                 "id" => 2,
-                "name" => "Check Balance",
+                "name" => "Topup Card",
             ],
             [
                 "id" => 3,
-                "name" => "Send Money",
+                "name" => "Check Balance",
             ],
             [
                 "id" => 4,
