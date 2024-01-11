@@ -342,18 +342,6 @@ class UssdController extends Controller
                     $topUpUserJourney->txn_amount = $SUBSCRIBER_INPUT;
                     $topUpUserJourney->save();
 
-                    $response_msg = $this->formatResponseMsg($this::$ENTER_PIN);
-
-                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
-                }
-
-
-
-                if ($topUpUserJourney->txn_amount != null && $topUpUserJourney->pin == null) {
-
-                    $topUpUserJourney->pin = $SUBSCRIBER_INPUT;
-                    $topUpUserJourney->save();
-
                     $top_up_response = $this->topUpCardAccount($MSISDN);
 
                     // dd($top_up_response);
@@ -379,6 +367,39 @@ class UssdController extends Controller
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
                 }
+
+
+
+                // if ($topUpUserJourney->txn_amount != null && $topUpUserJourney->pin == null) {
+
+                //     $topUpUserJourney->pin = $SUBSCRIBER_INPUT;
+                //     $topUpUserJourney->save();
+
+                //     $top_up_response = $this->topUpCardAccount($MSISDN);
+
+                //     // dd($top_up_response);
+
+                //     // if(1 + 1 == 2){
+
+                //     //     return $top_up_response;
+                //     // }
+
+                //     if ($top_up_response == null || $top_up_response['statusCode'] == $this::$STATUS_SEVER_ERROR) {
+
+                //         return response($this::$ERROR_MSG, $this::$STATUS_OK)->header('Auth-key', '');
+                //     }
+
+                //     if ($top_up_response['statusCode'] != $this::$STATUS_OK) {
+
+                //         $response_msg = $top_up_response['responseJson']['error_msg'];
+
+                //         return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                //     }
+
+                //     $response_msg = $top_up_response['responseJson']['response_msg'];
+
+                //     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                // }
             }
 
             //Check balance user journey

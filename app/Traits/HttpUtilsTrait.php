@@ -240,8 +240,7 @@ trait HttpUtilsTrait
                 "txn_amount" => $topUpUserJourney->txn_amount,
                 "account_type" => $topUpUserJourney->account_type,
                 "phone_number" => $topUpUserJourney->payer_phone_number,
-                "card_number" => $topUpUserJourney->card_number,
-                "pin" => $topUpUserJourney->pin,
+                "card_number" => $topUpUserJourney->card_number
             ]);
 
             TopUpCardUserJourney::destroy($topUpUserJourney->id);

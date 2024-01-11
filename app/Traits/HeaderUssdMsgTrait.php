@@ -47,7 +47,7 @@ trait HeaderUssdMsgTrait
     public static string $ENTER_RECEIVER_CARD_NUMBER = "Please enter the receiver's card number";
     public static string $SELECT_BANK = "Please select bank receiving";
     public static string $SENDING_AMOUNT = "Please enter the amount to be sent";
-    public static string $ENTER_BANK_REFERENCE = "Please enter the reference for this transaction";
+    public static string $ENTER_BANK_REFERENCE = "Enter receiver account number";
 
     //Invalid option
     public static string $INVALID_OPTION = "You selected an Invalid option";
