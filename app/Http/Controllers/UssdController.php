@@ -216,7 +216,7 @@ class UssdController extends Controller
                         return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
                     }
 
-                    $response_msg = $send_money_response['responseJson']['response_msg'];
+                    $response_msg = $send_money_response['responseJson']['response'];
 
                     return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
                 }
