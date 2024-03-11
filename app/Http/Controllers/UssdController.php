@@ -9,6 +9,7 @@ use App\Models\RegisterUserJourney;
 use App\Models\ResetPinUserJourney;
 use App\Models\SendMoneyUserJourney;
 use App\Models\TopUpCardUserJourney;
+use App\Models\InsuranceUserJourney;
 use App\Traits\HeaderUssdMsgTrait;
 use App\Traits\HttpUtilsTrait;
 use App\Traits\StatusCodeTrait;
@@ -36,21 +37,45 @@ class UssdController extends Controller
             $blockCardUserJourney = BlockCardUserJourney::where('phone_number', '=', $MSISDN)->first();
             $payMerchantJourney = PayMerchantUserJourney::where('phone_number', '=', $MSISDN)->first();
             $sendMoneyUserJourney = SendMoneyUserJourney::where('phone_number', '=', $MSISDN)->first();
+            $insuranceTypeJourney = InsuranceUserJourney::where('phone_number', '=', $MSISDN)->first();
 
             //dd((int) 1 == (string) '1');
             $NotSendMoney = $sendMoneyUserJourney == null;
 
-            //dd($accResponse["statusCode"]);
+            //dd($accResponse);
 
             if ($RequestType == '1') {
 
-                $options = $this->options($accResponse["statusCode"] != $this::$STATUS_OK);
+                #$options = $this->options($accResponse["statusCode"] != $this::$STATUS_OK);
+                $options = $this->options(true);
 
                 $response_msg = $this->formatOptionsResponseMsg($options, $this::$WELCOME_MSG);
 
                 return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
             }
 
+            if($insuranceTypeJourney == null && $RequestType == '2' && $SUBSCRIBER_INPUT == '2'){
+
+                $response_msg = $this->formatOptionsResponseMsg($this->InsuranceOptions(), $this::$INSURANCE_WELCOME_MESSAGE);
+                
+                $newInsuranceUserJourney = InsuranceUserJourney::create([
+                    'phone_number' => $MSISDN
+                ]);
+                
+                return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+            }
+
+            if(true && $insuranceTypeJourney != null){
+
+                if ($SUBSCRIBER_INPUT == '5' && $insuranceTypeJourney->step == 1){
+                    
+                    $response_msg = $this->formatResponseMsg($this::$INSURANCE_CLAIM_MESSAGE);
+
+                    return response($response_msg, $this::$STATUS_OK)->header('Auth-key', '');
+                }
+
+            }
+ 
             //CheckBalanceUserJourney
             if ($accResponse["statusCode"] == $this::$STATUS_NOT_FOUND) {
 

@@ -43,6 +43,37 @@ trait UtilsTrait
         ];
     }
 
+    public function InsuranceOptions()
+    {
+
+        return [
+            [
+                "id" => 1,
+                "name" => "Register",
+            ],
+            [
+                "id" => 2,
+                "name" => "Health Care",
+            ],
+            [
+                "id" => 3,
+                "name" => "Farmers Insurance",
+            ],
+            [
+                "id" => 4,
+                "name" => "Travel Insurance",
+            ],
+            [
+                "id" => 5,
+                "name" => "Claim",
+            ],
+            [
+                "id" => 0,
+                "name" => "back",
+            ]
+        ];
+    }
+
     public function NewUserOptions()
     {
 
@@ -52,9 +83,13 @@ trait UtilsTrait
                 "name" => "Register Card",
             ],
             [
+                "id" => 2,
+                "name" => "Insurance",
+            ],
+            [
                 "id" => 0,
                 "name" => "Cancel",
-            ],
+            ]
         ];
     }
 

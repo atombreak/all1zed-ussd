@@ -54,4 +54,8 @@ trait HeaderUssdMsgTrait
 
     public static string $INVALID_ENTRY = "Invalid entry";
 
+    //Insurance User Journey steps
+    public static string $INSURANCE_WELCOME_MESSAGE = "Choose your option";
+    public static string $INSURANCE_CLAIM_MESSAGE = "For your insurane claim please contact: +260970000000";
+
 }
